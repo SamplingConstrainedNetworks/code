@@ -1,5 +1,5 @@
-#ifndef pychaos_io_h
-#define pychaos_io_h
+#ifndef triangles_io_h
+#define triangles_io_h
 
 #include <string>
 #include <vector>
@@ -88,8 +88,9 @@ namespace io {
     }
 
     // Reads a file of arbitrary columns
-    std::vector<std::vector<double> > load(std::string file_name) {
-        std::vector<std::vector<double> > data;
+    template <typename T>
+    std::vector<std::vector<T> > load(std::string file_name) {
+        std::vector<std::vector<T> > data;
 
         std::ifstream file;
         file.open(file_name.c_str());
@@ -99,7 +100,7 @@ namespace io {
             exit(1);
         }
 
-        file.precision(std::numeric_limits<double>::digits10 + 1);
+        file.precision(std::numeric_limits<T>::digits10 + 1);
 
         while(true)
         {
@@ -110,8 +111,8 @@ namespace io {
             getline(file, line);
             std::istringstream iss(line);
 
-            std::vector<double> row;
-            copy(std::istream_iterator<double>(iss), std::istream_iterator<double>(),
+            std::vector<T> row;
+            copy(std::istream_iterator<T>(iss), std::istream_iterator<T>(),
                  back_inserter(row));
 
             if (row.size())

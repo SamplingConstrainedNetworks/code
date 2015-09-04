@@ -1,5 +1,5 @@
-#ifndef proposal_h
-#define proposal_h
+#ifndef triangles_proposal_h
+#define triangles_proposal_h
 
 #include "network.h"
 #include "random.h"
@@ -31,13 +31,13 @@ protected:
     Link random_old_link(Network const& network) const {
         Link link;
 
-        link.first = (unsigned int)rng.R(network.getN());
+        link.first = rng.R(0, network.getN());
 
         std::set<unsigned int> const& list = network.get_links(link.first);
         assert(list.size() != 0);
 
         // generates a random neighberhood, link.second, of link.first
-        unsigned int index_j = (unsigned int)rng.R((unsigned int)list.size());
+        unsigned int index_j = rng.R(0, list.size());
         std::set<unsigned int>::const_iterator it = list.begin();
         std::advance(it, index_j);
         link.second = *it;
@@ -52,7 +52,7 @@ protected:
 
         std::set<unsigned int> const& list = network.get_links(new_link.first);
         while (list.count(new_link.second) != 0 or new_link.second == new_link.first) {
-            new_link.second = (unsigned int)rng.R(network.getN());
+            new_link.second = rng.R(0, network.getN());
         }
 
         return new_link;
@@ -71,7 +71,7 @@ protected:
         while (network.get_links(old_link1.second).count(old_link2.second) != 0 or
                old_link2.second == old_link1.second) {
             // generate a random neighberhood, old_link2.second, of old_link2.first
-            unsigned int index_j = (unsigned int)rng.R(list.size());
+            unsigned int index_j = rng.R(0, list.size());
             std::set<unsigned int>::const_iterator it = list.begin();
             std::advance(it, index_j);
             old_link2.second = *it;

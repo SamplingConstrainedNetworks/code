@@ -1,5 +1,5 @@
-#ifndef test_system_h
-#define test_system_h
+#ifndef triangles_test_system_h
+#define triangles_test_system_h
 
 #include "gtest/gtest.h"
 #include "network.h"
@@ -161,10 +161,10 @@ TEST_F(TestMultiSquare, degree) {
     Random rng(1);
     FixedDegreeProposer proposer(rng);
 
-    proposer.check_degree_consistency(network);
+    proposer.check_degree_consistency(*network);
 
     for (unsigned int i = 0; i < 100; i++) {
-        GeneratedProposal proposal = proposer.generate_proposal(network);
+        GeneratedProposal proposal = proposer.generate_proposal(*network);
 
         /*
         std::cout << "old_link1 "<< proposal.old_link1.first << proposal.old_link1.second << std::endl;
@@ -173,14 +173,14 @@ TEST_F(TestMultiSquare, degree) {
         std::cout << "new_link2 "<< proposal.new_link2.first << proposal.new_link2.second << std::endl;
          */
 
-        proposer.propose(network, proposal);
+        proposer.propose(*network, proposal);
 
         /*
         std::cout << std::endl;
         network->print_links();
         std::cout << std::endl;
         */
-        proposer.check_degree_consistency(network);
+        proposer.check_degree_consistency(*network);
     }
 }
 

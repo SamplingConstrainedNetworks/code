@@ -1,4 +1,9 @@
+/*
+ This code contains all the methods this package implements with sane parameters
+ to run them.
 
+ See generic.sh to run this example.
+*/
 #include "sampler.h"
 
 
@@ -39,8 +44,8 @@ void wang_landau(unsigned int blocks) {
     WangLandauSampler sampler(rng, histogram, network);
     sampler.sample(15);
 
-    histogram.export_histogram(format("wl_%d.dat", blocks));
-    sampler.export_entropy(format("wl_%d.dat", blocks));
+    histogram.export_histogram(format("histogram_wl_%d.dat", blocks));
+    sampler.export_entropy(format("entropy_wl_%d.dat", blocks));
 }
 
 

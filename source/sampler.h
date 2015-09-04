@@ -1,5 +1,5 @@
-#ifndef sampler_h
-#define sampler_h
+#ifndef triangles_sampler_h
+#define triangles_sampler_h
 
 #include "histogram.h"
 #include "network.h"
@@ -19,7 +19,7 @@ public:
 };
 
 
-//! Sampler that draws samples from the uniform distribution.
+//! Sampler that draws samples networks without weights
 class UniformSampler : public Sampler {
 protected:
     FixedDegreeProposer proposer;
@@ -46,7 +46,7 @@ public:
 };
 
 
-//! Sampler that draws samples from the canonic distribution with a given beta.
+//! Sampler that draws samples from the canonic distribution on the number of triangles
 class CanonicSampler : public UniformSampler {
 protected:
     double beta;
@@ -88,7 +88,7 @@ public:
 };
 
 
-//! Sampler that computes the DOS.
+//! Sampler that computes the DOS of number of triangles using Wang-Landau algorithm
 class WangLandauSampler : public UniformSampler {
     std::vector<double> entropy;
     double f;
@@ -133,6 +133,7 @@ public:
             if (histogram.bin(triangles) == histogram.bins()
                 and going_up) {
                 going_up = false;
+                //std::cout << "reached up\n";
             }
             else if (histogram.bin(triangles) == 0
                      and not going_up) {
@@ -168,7 +169,7 @@ public:
                 data.push_back(row);
             }
         }
-        io::save(data, "results/entropy_" + file_name);
+        io::save(data, file_name);
     }
 
     void sample(unsigned int total_steps, unsigned int round_trips=5) {
@@ -180,7 +181,7 @@ public:
             wang_landau_step();
 
             histogram.export_histogram("tmp.dat");
-            export_entropy("tmp.dat");
+            export_entropy("entropy_tmp.dat");
             }
     }
 };

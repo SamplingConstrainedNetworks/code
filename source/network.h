@@ -1,12 +1,15 @@
-#ifndef network_h
-#define network_h
+#ifndef triangles_network_h
+#define triangles_network_h
 
 #include <cmath>  // for `exp`
 #include <assert.h>
 #include <vector>
 #include <set>
+#include <unordered_map>
 #include <string>
 #include <algorithm>
+
+#include "io.h"
 
 
 //! A network defined by nodes indexed by 0,1,...,N-1 and a link list.
@@ -15,8 +18,11 @@
 class Network
 {
 protected:
-    unsigned int Nnodes; //! number of nodes
-    std::vector<std::set<unsigned int> > links; //! links list
+    //! Maps nodes from other sources (data_node_i) to this network (node_i) and vice-versa.
+    std::vector<unsigned int> node_list; //! node_i -> data_node_i
+    std::unordered_map<unsigned int, unsigned int> backwards_list; //! data_node_i -> node_i
+
+    std::vector<std::set<unsigned int> > links; //! links list of `node_i`
 
     unsigned int total_triangles;
     std::vector<unsigned int> triangle_count; //! a cache.
@@ -36,7 +42,7 @@ protected:
     //! node_j, node_k, is node_i.
     void compute_triangles() {
         total_triangles = 0;
-        for (unsigned int node_i = 0; node_i < Nnodes; node_i++) {
+        for (unsigned int node_i = 0; node_i < getN(); node_i++) {
             triangle_count[node_i] = compute_triangles(node_i);
             total_triangles += triangle_count[node_i];
         }
@@ -80,23 +86,68 @@ protected:
 
     //! Checks that link list is consistent: if contains AB then also contains BA.
     void check_consistency() const {
-        for (unsigned int node_i = 0; node_i < Nnodes; node_i++)
+        for (unsigned int node_i = 0; node_i < getN(); node_i++)
             for(unsigned int node_j : links[node_i])
                 assert(links[node_j].count(node_i) == 1);
     }
 public:
 
     Network(unsigned int Nnodes, std::vector<std::set<unsigned int> > links) :
-    Nnodes(Nnodes), links(links), triangle_count(Nnodes) {
+            triangle_count(Nnodes), links(Nnodes), node_list(Nnodes), backwards_list(Nnodes) {
+
+        for (unsigned int node_i = 0; node_i < Nnodes; node_i++) {
+            node_list[node_i] = node_i;
+            backwards_list[node_i] = node_i;
+            if (node_i < links.size())
+                this->links[node_i] = links[node_i];
+        }
+
+        check_consistency();
+        compute_triangles();
+    }
+
+    //! Constructor that takes a file path as a network. It assumes the first two entries (in TSV) are
+    //! the node_i and node_j.
+    Network(std::string path) {
+        std::vector<std::vector<unsigned int> > data(io::load<unsigned int>(path));
+
+        unsigned int node = 0;
+        for (auto vector : data) {
+            assert(vector.size() >= 2);
+            unsigned data_node_i = vector[0];
+            unsigned data_node_j = vector[1];
+
+            if (backwards_list.find(data_node_i) == backwards_list.end()) {
+                node_list.push_back(data_node_i);
+                backwards_list[data_node_i] = node;
+                links.push_back(std::set<unsigned int>());
+                node += 1;
+            }
+
+            if (backwards_list.find(data_node_j) == backwards_list.end()) {
+                node_list.push_back(data_node_j);
+                backwards_list[data_node_j] = node;
+                links.push_back(std::set<unsigned int>());
+                node += 1;
+            }
+            unsigned int node_i = backwards_list[data_node_i];
+            unsigned int node_j = backwards_list[data_node_j];
+            //std::cout << node << " " << node_i << " " << node_j << std::endl;
+
+            links[node_i].insert(node_j);
+            links[node_j].insert(node_i);
+        }
+
+        triangle_count = std::vector<unsigned int>(getN());
         check_consistency();
         compute_triangles();
     }
 
     //! get number of nodes
-    inline unsigned int getN() const {return Nnodes;}
+    inline unsigned int getN() const {return (unsigned int)node_list.size();}
 
     void print_links() const {
-        for (unsigned int node_i = 0; node_i < Nnodes; node_i++) {
+        for (unsigned int node_i = 0; node_i < getN(); node_i++) {
             printf("%d: ", node_i);
             for (unsigned int node_j : links[node_i])
             {

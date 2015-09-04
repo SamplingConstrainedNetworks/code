@@ -1,5 +1,5 @@
-#ifndef pychaos_histogram_h
-#define pychaos_histogram_h
+#ifndef triangles_histogram_h
+#define triangles_histogram_h
 
 #include <vector>
 #include <assert.h>
@@ -8,7 +8,8 @@
 
 #include "io.h"
 
-
+//! This is an implementation of an Histogram.
+//! Check its tests on test/test_histogram.h to see how it works in practice.
 template <typename T>
 class Histogram {
 protected:
@@ -19,6 +20,7 @@ protected:
     unsigned int _count; // number of measured samples
     std::vector<unsigned int> _histogram;  // histogram of samples over bins
 
+    // these two can be overwritten in a subclass to use non-linear binning
     inline virtual T v(T value) const {
         return value;
     }
@@ -50,22 +52,19 @@ public:
     }
 
     unsigned int bin(T value) const {
-        //std::cout << "bin: " << value << "->" << (value - _lowerBound)*_bins/(_upperBound - _lowerBound) << std::endl;
         value = v(value);
         if (value <= _lowerBound)
             return 0;
         if (value >= _upperBound)
             return _bins;
 
-        // 0.000000001 because in roundoffs of integer histograms, we want to ensure round up.
         unsigned int bin = (value - _lowerBound)*_bins/(_upperBound - _lowerBound);
         assert(bin < _bins);
         return bin;
     }
 
-    // inverse of `bin`
+    //! inverse of `bin`
     T value(unsigned int bin) const {
-        //std::cout << "value: "<< bin << "->" << iv((_upperBound - _lowerBound)*bin/(_bins-1)) << std::endl;
         if (bin >= _bins)
             return iv(_upperBound);
         if (bin <= 0)
@@ -125,88 +124,5 @@ public:
         io::save(data, file_name);
     }
 };
-
-
-template <typename T>
-class Log2Histogram : public Histogram<T> {
-protected:
-    virtual T v(T value) const {
-        return log2(value);
-    }
-    virtual T iv(T value) const {
-        return pow(2, value);
-    }
-public:
-    Log2Histogram(T lowerBound,
-                  T upperBound,
-                  unsigned int bins) : Histogram<T>(v(lowerBound), v(upperBound), bins) {}
-};
-
-
-// Histogram that also measures the excitation matrix
-template <typename T>
-class ExcitationHistogram : public Histogram<T> {
-protected:
-    std::vector<std::vector<unsigned int> > _matrix;
-
-public:
-    ExcitationHistogram(T lowerBound, T upperBound, unsigned int bins) :
-            Histogram<T>(lowerBound, upperBound, bins), _matrix(bins, std::vector<unsigned int>(bins))
-    {
-        reset();
-    }
-
-    using Histogram<T>::add;
-    void add(T value, T valuePrime)
-    {
-        _matrix[bin(value)][bin(valuePrime)]++;
-        Histogram<T>::add(value);
-    }
-
-    virtual void reset() {
-        Histogram<T>::reset();
-        for (unsigned int i = 0; i <= this->_bins; i++)
-            for (unsigned int j = 0; j <= this->_bins; j++)
-                _matrix[i][j] = 0;
-    }
-
-    void export_matrix(std::string file_name) const {
-        std::vector<std::vector<double> > data;
-
-        for (unsigned int i = 0; i <= this->_bins; i++)
-        {
-            for (unsigned int j = 0; j <= this->_bins; j++)
-            {
-                double value = 0;
-                if (this->_histogram[i] > 0)
-                    value = _matrix[i][j]*1./this->_histogram[i];
-
-                std::vector<double> row(3);
-                row[0] = i;
-                row[1] = j;
-                row[2] = value;
-                data.push_back(row);
-            }
-        }
-        io::save(data, file_name);
-    }
-};
-
-
-template <typename T>
-class LogExcitationHistogram : public ExcitationHistogram<T> {
-protected:
-    virtual T v(T value) const {
-        return log2(value);
-    }
-    virtual T iv(T value) const {
-        return pow(2, value);
-    }
-public:
-    LogExcitationHistogram(T lowerBound,
-                           T upperBound,
-                           unsigned int bins) : ExcitationHistogram<T>(v(lowerBound), v(upperBound), bins) {}
-};
-
 
 #endif
