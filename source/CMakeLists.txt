@@ -1,0 +1,5 @@
+project(sample_networks)
+add_library(sample_networks INTERFACE)
+
+target_compile_features(sample_networks INTERFACE cxx_std_11)
+target_include_directories(sample_networks INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
