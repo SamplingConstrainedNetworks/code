@@ -28,6 +28,11 @@ To compile the examples, use:
     mkdir fig1_results # <- entropy.cpp outputs the result to this directory 
     BLOCKS=4 ROUND_TRIPS=4 ./example
 
+The example in which a network is used as an input is:
+    g++ -std=c++11 examples/read_network.cpp -Isource -o read_network
+    ./read_network
+(outputs are written to directory output)
+
 Alternatively, we also provide a basic CMake project in case your IDE supports cmake.
 
 ## Tests
