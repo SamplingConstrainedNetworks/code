@@ -23,11 +23,11 @@ public:
 class UniformSampler : public Sampler {
 protected:
     FixedDegreeProposer proposer;
-    FixedDegreeNetwork & network;
+    Network & network;
 public:
     UniformSampler(Random & rng,
                    Histogram<unsigned int> & histogram,
-                   FixedDegreeNetwork & network) :
+                   Network & network) :
     Sampler(rng, histogram), proposer(rng), network(network) {}
 
     void sample(unsigned int total_samples) {
@@ -53,7 +53,7 @@ protected:
 public:
     CanonicSampler(Random & rng,
                    Histogram<unsigned int> & histogram,
-                   FixedDegreeNetwork & network, double beta) :
+                   Network & network, double beta) :
     UniformSampler(rng, histogram, network), beta(beta) {}
 
     void markov_step() {
@@ -95,7 +95,7 @@ class WangLandauSampler : public UniformSampler {
 public:
     WangLandauSampler(Random & rng,
                       Histogram<unsigned int> & histogram,
-                      FixedDegreeNetwork & network) :
+                      Network & network) :
     UniformSampler(rng, histogram, network), entropy(histogram.bins() + 1), f(1) {}
 
     void markov_step() {
